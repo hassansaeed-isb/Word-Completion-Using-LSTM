@@ -1,0 +1,354 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shakespeare Word Completion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .suggestion-btn {
+            margin: 0.25rem;
+            transition: all 0.2s ease;
+        }
+        .suggestion-btn:hover {
+            transform: translateY(-2px);
+        }
+        #text-input {
+            min-height: 150px;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        #history-container {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .typing-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #007bff;
+            margin-right: 5px;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            50% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+        .history-item {
+            padding: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        .navbar-brand {
+            font-family: 'Georgia', serif;
+            font-weight: bold;
+        }
+        .shakespeare-bg {
+            background-color: #f5f5f5;
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Shakespeare.jpg/220px-Shakespeare.jpg');
+            background-repeat: no-repeat;
+            background-position: right 20px bottom 20px;
+            background-size: 100px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Shakespeare Word Completion</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/instructions">Instructions</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Word Completion</h4>
+                    </div>
+                    <div class="card-body">
+                        <textarea id="text-input" class="form-control mb-3" placeholder="Start typing here to experience Shakespeare-style word suggestions..."></textarea>
+                        
+                        <div id="suggestions-container" class="mb-3">
+                            <h5>Suggested Next Words:</h5>
+                            <div id="suggestions" class="d-flex flex-wrap"></div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button id="update-btn" class="btn btn-primary">
+                                Update Suggestions
+                            </button>
+                            <button id="complete-btn" class="btn btn-success">
+                                Complete Sentence
+                            </button>
+                            <button id="clear-btn" class="btn btn-secondary">
+                                Clear Text
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">Settings</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="temperature" class="form-label">Temperature (Creativity): <span id="temp-value">1.0</span></label>
+                            <input type="range" class="form-range" id="temperature" min="0.1" max="2.0" step="0.1" value="1.0">
+                            <small class="text-muted">Lower values = more predictable, higher values = more creative</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="top-k" class="form-label">Number of Suggestions (Top-K):</label>
+                            <select id="top-k" class="form-select">
+                                <option value="1">1</option>
+                                <option value="3">3</option>
+                                <option value="5" selected>5</option>
+                                <option value="8">8</option>
+                                <option value="10">10</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max-words" class="form-label">Max Words for Completion:</label>
+                            <input type="number" id="max-words" class="form-control" value="20" min="1" max="100">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header bg-secondary text-white">
+                        <h4 class="mb-0">History</h4>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="history-container" class="p-2">
+                            <div class="text-center text-muted py-4">
+                                Your generated texts will appear here
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-3 shakespeare-bg">
+            <div class="card-body">
+                <h5 class="card-title">About This Project</h5>
+                <p class="card-text">
+                    This application uses a Long Short-Term Memory (LSTM) neural network trained on Shakespeare's plays to predict and generate text in Shakespeare's style. Type a few words and the model will suggest what might come next based on patterns it learned from Shakespeare's writing.
+                </p>
+                <p class="card-text">
+                    <strong>Try these examples:</strong> "to be or not to", "all the world's a", "the quality of mercy is"
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">Shakespeare Word Completion - LSTM Neural Network Project</p>
+        </div>
+    </footer>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
+            const textInput = document.getElementById('text-input');
+            const suggestionsContainer = document.getElementById('suggestions');
+            const updateBtn = document.getElementById('update-btn');
+            const completeBtn = document.getElementById('complete-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const tempSlider = document.getElementById('temperature');
+            const tempValue = document.getElementById('temp-value');
+            const topKSelect = document.getElementById('top-k');
+            const maxWordsInput = document.getElementById('max-words');
+            const historyContainer = document.getElementById('history-container');
+            
+            let typingTimer;
+            const doneTypingInterval = 500;
+            
+            // Event listeners
+            textInput.addEventListener('input', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(getSuggestions, doneTypingInterval);
+            });
+            
+            updateBtn.addEventListener('click', getSuggestions);
+            completeBtn.addEventListener('click', completeSentence);
+            clearBtn.addEventListener('click', function() {
+                textInput.value = '';
+                suggestionsContainer.innerHTML = '';
+            });
+            
+            tempSlider.addEventListener('input', function() {
+                tempValue.textContent = this.value;
+            });
+            
+            // Functions
+            function getSuggestions() {
+                const text = textInput.value.trim();
+                if (!text) {
+                    suggestionsContainer.innerHTML = '';
+                    return;
+                }
+                
+                // Show loading indicator
+                suggestionsContainer.innerHTML = '<div class="d-flex align-items-center"><div class="typing-indicator"></div><div class="typing-indicator" style="animation-delay: 0.2s"></div><div class="typing-indicator" style="animation-delay: 0.4s"></div> Generating suggestions...</div>';
+                
+                fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        temperature: parseFloat(tempSlider.value),
+                        top_k: parseInt(topKSelect.value)
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    suggestionsContainer.innerHTML = '';
+                    
+                    if (data.error) {
+                        suggestionsContainer.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+                        return;
+                    }
+                    
+                    data.forEach(item => {
+                        const btn = document.createElement('button');
+                        btn.className = 'btn btn-outline-primary suggestion-btn';
+                        btn.textContent = `${item.word} (${(item.probability * 100).toFixed(1)}%)`;
+                        
+                        btn.addEventListener('click', function() {
+                            let currentText = textInput.value;
+                            if (currentText && !currentText.endsWith(' ')) {
+                                currentText += ' ';
+                            }
+                            textInput.value = currentText + item.word + ' ';
+                            textInput.focus();
+                            getSuggestions();
+                        });
+                        
+                        suggestionsContainer.appendChild(btn);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    suggestionsContainer.innerHTML = '<div class="alert alert-danger">Error getting suggestions</div>';
+                });
+            }
+            
+            function completeSentence() {
+                const text = textInput.value.trim();
+                if (!text) return;
+                
+                // Show loading indicator
+                const originalText = text;
+                textInput.value += ' ';
+                textInput.value += '⌛ Generating...';
+                
+                fetch('/complete_sentence', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        max_words: parseInt(maxWordsInput.value),
+                        temperature: parseFloat(tempSlider.value)
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        textInput.value = originalText;
+                        alert(data.error);
+                        return;
+                    }
+                    
+                    // Update text input
+                    textInput.value = data.completed_text;
+                    
+                    // Add to history
+                    addToHistory(originalText, data.completed_text);
+                    
+                    // Update suggestions
+                    getSuggestions();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    textInput.value = originalText;
+                });
+            }
+            
+            function addToHistory(original, completed) {
+                // Clear empty history message if it exists
+                if (historyContainer.querySelector('.text-muted')) {
+                    historyContainer.innerHTML = '';
+                }
+                
+                // Create history item
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                // Format the content to highlight the addition
+                const originalWords = original.trim().split(' ');
+                const completedWords = completed.trim().split(' ');
+                
+                let highlightedText = '';
+                for (let i = 0; i < completedWords.length; i++) {
+                    if (i < originalWords.length) {
+                        highlightedText += completedWords[i] + ' ';
+                    } else {
+                        highlightedText += `<span class="text-success fw-bold">${completedWords[i]}</span> `;
+                    }
+                }
+                
+                historyItem.innerHTML = `
+                    <small class="text-muted">Original:</small>
+                    <div class="mb-1">${original}</div>
+                    <small class="text-muted">Completed:</small>
+                    <div>${highlightedText}</div>
+                `;
+                
+                // Add to container (at the top)
+                historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+            }
+            
+            // Initial suggestions
+            if (textInput.value.trim()) {
+                getSuggestions();
+            }
+        });
+    </script>
+</body>
+</html>

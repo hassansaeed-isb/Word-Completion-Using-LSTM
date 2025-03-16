@@ -1,0 +1,5 @@
+max_sequence_length = 8
+max_words = 5000
+embedding_dim = 50
+lstm_units = 50
+total_words = 5001

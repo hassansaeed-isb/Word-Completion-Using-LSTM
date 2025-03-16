@@ -1,0 +1,161 @@
+<!-- templates/instructions.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instructions - Shakespeare Word Completion</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">Shakespeare Word Completion - Instructions</h1>
+        
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Setup Instructions</h4>
+            </div>
+            <div class="card-body">
+                <h5>1. Train the model on Kaggle</h5>
+                <p>Start by training the LSTM model on Kaggle with GPU acceleration:</p>
+                <ol>
+                    <li>Go to <a href="https://www.kaggle.com/" target="_blank">Kaggle</a> and create a new notebook</li>
+                    <li>Add the <a href="https://www.kaggle.com/datasets/kingburrito666/shakespeare-plays" target="_blank">Shakespeare plays dataset</a> to your notebook</li>
+                    <li>Copy the training code from the file <code>kaggle_training.py</code> into your notebook</li>
+                    <li>Run the notebook with GPU acceleration enabled (Settings → Accelerator → GPU)</li>
+                    <li>Wait for the training to complete (approximately 15-30 minutes depending on the GPU)</li>
+                </ol>
+                
+                <h5>2. Download the model files</h5>
+                <p>After training is complete, download the following files from the Output tab:</p>
+                <ul>
+                    <li><code>shakespeare_lstm_model.keras</code> (or <code>shakespeare_lstm_model.h5</code> for older versions)</li>
+                    <li><code>tokenizer.pickle</code></li>
+                    <li><code>model_params.txt</code> (optional, but helpful)</li>
+                </ul>
+                
+                <h5>3. Set up the Flask application</h5>
+                <p>Now, set up the Flask application on your local machine:</p>
+                <ol>
+                    <li>Create a new directory for the project</li>
+                    <li>Copy the Flask app code (<code>app.py</code>) into this directory</li>
+                    <li>Create a <code>templates</code> directory and add the HTML template files</li>
+                    <li>Place the downloaded model files in the same directory as <code>app.py</code></li>
+                </ol>
+                
+                <h5>4. Install required dependencies</h5>
+                <pre>pip install flask tensorflow numpy nltk pandas</pre>
+                
+                <h5>5. Run the Flask application</h5>
+                <pre>python app.py</pre>
+                
+                <p>The application will be available at <a href="http://127.0.0.1:5000">http://127.0.0.1:5000</a></p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">Using the Application</h4>
+            </div>
+            <div class="card-body">
+                <h5>Word Prediction</h5>
+                <p>As you type text in the input area, the application automatically suggests the next word:</p>
+                <ol>
+                    <li>Type a partial sentence in the text area</li>
+                    <li>The model will suggest the most likely next words</li>
+                    <li>Click on any suggestion to add it to your text</li>
+                    <li>Continue typing or clicking suggestions to build your sentence</li>
+                </ol>
+                
+                <h5>Sentence Completion</h5>
+                <p>You can also let the model automatically complete a sentence:</p>
+                <ol>
+                    <li>Type a seed phrase or partial sentence</li>
+                    <li>Click the "Complete Sentence" button</li>
+                    <li>The model will generate additional words until it forms a complete sentence</li>
+                </ol>
+                
+                <h5>Adjusting Settings</h5>
+                <p>The application allows you to customize the model behavior:</p>
+                <ul>
+                    <li><strong>Temperature</strong>: Controls the randomness of predictions. Higher values (>1.0) make the output more random, while lower values (<1.0) make it more deterministic.</li>
+                    <li><strong>Top-K</strong>: Controls how many word suggestions to display.</li>
+                    <li><strong>Max Words</strong>: Sets the maximum number of words to generate when completing a sentence.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Project Structure</h4>
+            </div>
+            <div class="card-body">
+                <h5>File Organization</h5>
+                <pre>
+shakespeare-word-completion/
+├── app.py                        # Main Flask application
+├── shakespeare_lstm_model.keras  # Trained LSTM model
+├── tokenizer.pickle              # Saved tokenizer
+├── model_params.txt              # Model parameters
+└── templates/
+    ├── index.html                # Main UI template
+    ├── error.html                # Error page template
+    └── instructions.html         # This instructions page
+                </pre>
+                
+                <h5>Code Structure</h5>
+                <p>The application consists of three main components:</p>
+                <ol>
+                    <li><strong>Model Training</strong> (on Kaggle):
+                        <ul>
+                            <li>Data preprocessing and tokenization</li>
+                            <li>LSTM model creation and training</li>
+                            <li>Model evaluation and saving</li>
+                        </ul>
+                    </li>
+                    <li><strong>Flask Backend</strong>:
+                        <ul>
+                            <li>Model loading and prediction</li>
+                            <li>API endpoints for word prediction and sentence completion</li>
+                            <li>Temperature-controlled text generation</li>
+                        </ul>
+                    </li>
+                    <li><strong>Web Interface</strong>:
+                        <ul>
+                            <li>Interactive text input area</li>
+                            <li>Dynamic word suggestion display</li>
+                            <li>Settings controls for customization</li>
+                            <li>History of generated texts</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-primary">Return to Application</a>
+        </div>
+    </div>
+</body>
+</html>
